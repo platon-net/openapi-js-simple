@@ -1,0 +1,189 @@
+﻿<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>API Client GET Demo</title>
+	<style>
+		:root {
+			font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			color: #1a1a1a;
+			background: #f5f7fb;
+		}
+
+		body {
+			margin: 0;
+			padding: 24px;
+		}
+
+		.wrap {
+			max-width: 860px;
+			margin: 0 auto;
+			background: #fff;
+			border: 1px solid #d9dfeb;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 2px 8px rgba(21, 32, 56, 0.06);
+		}
+
+		h1 {
+			margin: 0 0 6px;
+			font-size: 24px;
+		}
+
+		p {
+			margin: 0 0 16px;
+			color: #4b5563;
+		}
+
+		form {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 12px;
+		}
+
+		label {
+			display: grid;
+			gap: 6px;
+			font-size: 14px;
+			font-weight: 600;
+		}
+
+		input {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 10px 12px;
+			font-size: 14px;
+			border: 1px solid #c6cedd;
+			border-radius: 8px;
+			outline: none;
+		}
+
+		input:focus {
+			border-color: #2563eb;
+			box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+		}
+
+		button {
+			width: fit-content;
+			padding: 10px 14px;
+			border: 0;
+			border-radius: 8px;
+			background: #2563eb;
+			color: #fff;
+			font-weight: 600;
+			cursor: pointer;
+		}
+
+		button:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		.section {
+			margin-top: 16px;
+		}
+
+		.error {
+			color: #b91c1c;
+			min-height: 20px;
+			font-weight: 600;
+		}
+
+		pre {
+			margin: 0;
+			border: 1px solid #d9dfeb;
+			border-radius: 8px;
+			background: #0f172a;
+			color: #e2e8f0;
+			padding: 12px;
+			overflow: auto;
+			font-size: 13px;
+			line-height: 1.45;
+			min-height: 140px;
+		}
+	</style>
+</head>
+
+<body>
+	<main class="wrap">
+		<h1>GET Request Demo</h1>
+		<p>Simple browser demo for <code>src/API.js</code> (vanilla JS + ES modules).</p>
+
+		<form id="apiForm">
+			<label>
+				Base URL
+				<input id="baseUrl" name="baseUrl" type="url" required placeholder="https://setup.platon.sk/api/"
+					value="https://setup.platon.sk/api/">
+			</label>
+
+			<label>
+				Endpoint
+				<input id="endpoint" name="endpoint" type="text" required placeholder="/system/hello"
+					value="/system/hello">
+			</label>
+
+			<label>
+				Bearer Token (optional)
+				<input id="bearerToken" name="bearerToken" type="text" placeholder="YOUR_TOKEN">
+			</label>
+
+			<button id="submitBtn" type="submit">Run GET Request</button>
+		</form>
+
+		<section class="section">
+			<div id="errorBox" class="error"></div>
+		</section>
+
+		<section class="section">
+			<h2>Response</h2>
+			<pre id="responseBox">No response yet.</pre>
+		</section>
+	</main>
+
+	<script type="module">
+		// Import API client as an ES module from the project source.
+		import API from '../src/API.js';
+
+		const form = document.getElementById('apiForm');
+		const submitBtn = document.getElementById('submitBtn');
+		const responseBox = document.getElementById('responseBox');
+		const errorBox = document.getElementById('errorBox');
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			errorBox.textContent = '';
+			responseBox.textContent = 'Loading...';
+			submitBtn.disabled = true;
+
+			const baseUrl = document.getElementById('baseUrl').value.trim();
+			const endpoint = document.getElementById('endpoint').value.trim();
+			const bearerToken = document.getElementById('bearerToken').value.trim();
+
+			try {
+				// Create a new API instance using user-provided base URL.
+				const api = new API(baseUrl);
+
+				// Set bearer token only if user provided one.
+				if (bearerToken.length > 0) {
+					api.setBearerToken(bearerToken);
+				}
+
+				// Execute GET request and render response as pretty JSON.
+				const result = await api.get(endpoint);
+				responseBox.textContent = JSON.stringify(result, null, 2);
+			} catch (error) {
+				const statusPart = typeof error.status === 'number' ? `Status: ${error.status}` : 'Status: n/a';
+				errorBox.textContent = `${statusPart} | ${error.message}`;
+				responseBox.textContent = error.responseBody !== undefined
+					? JSON.stringify(error.responseBody, null, 2)
+					: 'No response body available.';
+			} finally {
+				submitBtn.disabled = false;
+			}
+		});
+	</script>
+</body>
+
+</html>
